@@ -5,6 +5,14 @@ export interface AnimationFrame {
   progress: number;
 }
 
+function getFrameBudget(blockCount: number, baseFrames: number): number {
+  if (blockCount > 8000) return Math.min(baseFrames, 8);
+  if (blockCount > 4000) return Math.min(baseFrames, 10);
+  if (blockCount > 2000) return Math.min(baseFrames, 14);
+  if (blockCount > 1000) return Math.min(baseFrames, 18);
+  return baseFrames;
+}
+
 /**
  * Generate animation frames for simultaneous block movement
  */
@@ -32,7 +40,8 @@ export function generateSimultaneousAnimation(
     adjustedFps = 10; // Very few frames for extreme cases
   }
 
-  const totalFrames = Math.floor((duration / 1000) * adjustedFps);
+  const baseFrames = Math.floor((duration / 1000) * adjustedFps);
+  const totalFrames = Math.max(6, getFrameBudget(blockCount, baseFrames));
 
   for (let frame = 0; frame <= totalFrames; frame++) {
     const progress = frame / totalFrames;
@@ -76,9 +85,16 @@ export function renderFrame(
   ctx.fillRect(0, 0, width, height);
 
   // Batch putImageData calls for better performance
-  // For very large block counts, we can skip some intermediate positions
+  // Skip some draws for large block counts to keep playback responsive
   const blockCount = frame.blocks.length;
-  const skipFactor = blockCount > 10000 ? 2 : 1; // Skip every other block for huge counts
+  let skipFactor = 1;
+  if (frame.progress > 0 && frame.progress < 1) {
+    if (blockCount > 8000) {
+      skipFactor = 3;
+    } else if (blockCount > 3000) {
+      skipFactor = 2;
+    }
+  }
 
   for (let i = 0; i < frame.blocks.length; i += skipFactor) {
     const { block, x, y } = frame.blocks[i];

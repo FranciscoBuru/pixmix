@@ -17,7 +17,19 @@ export default function ImageUploader({ label, onImageLoad, image }: ImageUpload
       const reader = new FileReader();
       reader.onload = (event) => {
         if (event.target?.result) {
-          onImageLoad(event.target.result as string);
+          const dataUrl = event.target.result as string;
+          const img = new Image();
+          img.onload = () => {
+            if (img.width !== img.height) {
+              alert('Please upload a square image (e.g., 512x512).');
+              return;
+            }
+            onImageLoad(dataUrl);
+          };
+          img.onerror = () => {
+            alert('Could not load the selected image.');
+          };
+          img.src = dataUrl;
         }
       };
       reader.readAsDataURL(file);
@@ -29,16 +41,17 @@ export default function ImageUploader({ label, onImageLoad, image }: ImageUpload
   };
 
   return (
-    <div className="border border-gray-200 rounded-xl overflow-hidden bg-white">
-      <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
-        <h3 className="text-sm font-semibold text-gray-700">
+    <div className="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-sm lift-on-hover relative">
+      <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-emerald-500 via-cyan-500 to-emerald-500" />
+      <div className="px-4 py-3 border-b border-slate-200 bg-slate-50">
+        <h3 className="text-sm font-semibold text-slate-700">
           {label}
         </h3>
       </div>
 
       <div
         onClick={handleClick}
-        className="p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+        className="p-4 cursor-pointer hover:bg-slate-50 transition-colors"
       >
         {image ? (
           <div className="relative group">
@@ -46,18 +59,18 @@ export default function ImageUploader({ label, onImageLoad, image }: ImageUpload
             <img
               src={image}
               alt={label}
-              className="w-full h-auto rounded-lg"
+              className="w-full h-auto rounded-lg border border-slate-200 shadow-sm"
             />
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors rounded-lg flex items-center justify-center">
-              <span className="opacity-0 group-hover:opacity-100 text-white text-sm font-medium bg-black/70 px-3 py-1 rounded-md transition-opacity">
+              <span className="opacity-0 group-hover:opacity-100 text-white text-sm font-medium bg-black/70 px-3 py-1 rounded-md transition-opacity shadow">
                 Click to change
               </span>
             </div>
           </div>
         ) : (
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-indigo-400 transition-colors">
+          <div className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center hover:border-emerald-400 transition-colors bg-slate-50/50">
             <svg
-              className="mx-auto h-12 w-12 text-gray-300"
+              className="mx-auto h-12 w-12 text-slate-300"
               stroke="currentColor"
               fill="none"
               viewBox="0 0 48 48"
@@ -70,8 +83,8 @@ export default function ImageUploader({ label, onImageLoad, image }: ImageUpload
                 strokeLinejoin="round"
               />
             </svg>
-            <p className="text-sm text-gray-500 mt-3">Click to upload</p>
-            <p className="text-xs text-gray-400 mt-1">PNG, JPG, GIF</p>
+            <p className="text-sm text-slate-600 mt-3">Click to upload</p>
+            <p className="text-xs text-slate-400 mt-1">PNG, JPG, GIF</p>
           </div>
         )}
       </div>

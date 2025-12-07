@@ -1,4 +1,3 @@
-import { Munkres } from 'munkres-js';
 import { Block, MatchResult } from './types';
 
 /**
@@ -71,39 +70,6 @@ export function findGreedyMatching(
       });
     }
   }
-
-  return results;
-}
-
-/**
- * Find optimal matching using Hungarian algorithm (slow but optimal)
- */
-export function findOptimalMatching(
-  sourceBlocks: Block[],
-  targetBlocks: Block[],
-  gradientWeight: number
-): MatchResult[] {
-  const n = sourceBlocks.length;
-
-  // Build cost matrix
-  const costMatrix: number[][] = [];
-  for (let i = 0; i < n; i++) {
-    costMatrix[i] = [];
-    for (let j = 0; j < n; j++) {
-      costMatrix[i][j] = calculateCost(sourceBlocks[i], targetBlocks[j], gradientWeight);
-    }
-  }
-
-  // Run Hungarian algorithm
-  const munkres = new Munkres();
-  const assignments = munkres.compute(costMatrix);
-
-  // Convert to MatchResult format
-  const results: MatchResult[] = assignments.map(([sourceIdx, targetIdx]: [number, number]) => ({
-    sourceIndex: sourceIdx,
-    targetIndex: targetIdx,
-    cost: costMatrix[sourceIdx][targetIdx],
-  }));
 
   return results;
 }

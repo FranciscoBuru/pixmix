@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { loadImage, normalizeImageSizes, drawImageOnCanvas } from '@/lib/imageUtils';
 import { divideIntoBlocks } from '@/lib/blocks';
-import { findOptimalMatching, findGreedyMatching } from '@/lib/matching';
+import { findGreedyMatching } from '@/lib/matching';
 import { generateSimultaneousAnimation, renderFrame, AnimationFrame } from '@/lib/animation';
 import { exportToGIF, downloadBlob } from '@/lib/gifExport';
 import { Block, MatchResult } from '@/lib/types';
@@ -13,7 +13,7 @@ interface ImageProcessorProps {
   targetImage: string;
   blockSize: number;
   gradientWeight: number;
-  algorithm: 'greedy' | 'hungarian';
+  algorithm: 'greedy';
 }
 
 export default function ImageProcessor({
@@ -80,9 +80,7 @@ export default function ImageProcessor({
         setProcessingStep(`Computing ${algorithm} matching (${totalBlocks} blocks)...`);
         await new Promise(resolve => setTimeout(resolve, 100));
 
-        const matches = algorithm === 'greedy'
-          ? findGreedyMatching(baseBlocksData, targetBlocksData, gradientWeight)
-          : findOptimalMatching(baseBlocksData, targetBlocksData, gradientWeight);
+        const matches = findGreedyMatching(baseBlocksData, targetBlocksData, gradientWeight);
         setMatchResults(matches);
 
         setProcessingStep('Generating animation...');
@@ -131,10 +129,14 @@ export default function ImageProcessor({
 
     // Adjust duration based on block count - longer for more blocks
     const blockCount = baseBlocks.length;
-    let targetDuration = 2000; // ms
+    let targetDuration = 1600; // ms
 
-    if (blockCount > 10000) {
-      targetDuration = 3000; // Give more time for huge block counts
+    if (blockCount > 8000) {
+      targetDuration = 2400; // Give a bit more time for extreme block counts
+    } else if (blockCount > 4000) {
+      targetDuration = 2000;
+    } else if (blockCount > 1500) {
+      targetDuration = 1800;
     }
 
     const frameDelay = targetDuration / frames.length;
@@ -193,16 +195,16 @@ export default function ImageProcessor({
 
   if (processing && frames.length === 0) {
     return (
-      <div className="border border-gray-200 rounded-xl p-12 bg-white text-center">
-        <div className="flex flex-col items-center">
+      <div className="border border-slate-200 rounded-xl p-12 bg-white text-center h-full min-h-[480px] flex items-center justify-center shadow-sm">
+        <div className="flex flex-col items-center gap-3">
           <div className="relative">
-            <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200"></div>
-            <div className="animate-spin rounded-full h-16 w-16 border-4 border-indigo-600 border-t-transparent absolute top-0"></div>
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-slate-200"></div>
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-emerald-600 border-t-transparent absolute top-0"></div>
           </div>
-          <p className="text-gray-600 mt-6 font-medium">Processing images...</p>
-          <p className="text-gray-500 text-sm mt-2">{processingStep}</p>
-          <p className="text-gray-400 text-xs mt-4">
-            Large block counts may take a while. Try increasing block size for faster processing.
+          <p className="text-slate-700 font-medium">Processing images...</p>
+          <p className="text-slate-500 text-sm">{processingStep}</p>
+          <p className="text-slate-400 text-xs">
+            Large block counts may take a moment. Increase block size for faster previews.
           </p>
         </div>
       </div>
@@ -210,56 +212,51 @@ export default function ImageProcessor({
   }
 
   return (
-    <div className="border border-gray-200 rounded-xl overflow-hidden bg-white">
-      {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-        <h2 className="text-lg font-semibold text-gray-900">
-          Animation Preview
-        </h2>
-      </div>
+    <div className="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-sm h-full flex flex-col relative lift-on-hover">
+      <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-emerald-500 via-cyan-500 to-emerald-500" />
+      {processing && (
+        <span className="absolute top-4 right-4 text-xs font-medium text-amber-700 bg-amber-100 px-3 py-1 rounded-full border border-amber-200 shadow-sm">
+          {processingStep || 'Processing...'}
+        </span>
+      )}
 
-      {/* Canvas */}
-      <div className="p-6 bg-gradient-to-br from-gray-50 to-gray-100">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 min-h-[400px] flex items-center justify-center">
+      <div className="flex-1 flex flex-col gap-4 p-5 overflow-hidden">
+        <div className="flex-1 bg-gradient-to-br from-slate-50 to-white rounded-lg shadow-inner border border-slate-200 p-4 flex items-center justify-center overflow-hidden min-h-[560px]">
           {dimensions.width > 0 && dimensions.height > 0 ? (
             <canvas
               ref={canvasRef}
               width={dimensions.width}
               height={dimensions.height}
-              className="mx-auto rounded"
+              className="mx-auto rounded border border-slate-200 shadow-sm"
               style={{ maxWidth: '100%', height: 'auto', display: 'block' }}
             />
           ) : (
-            <p className="text-gray-400">Canvas initializing...</p>
+            <p className="text-slate-400 text-sm">Canvas initializing...</p>
           )}
         </div>
-      </div>
 
-      {/* Stats */}
-      <div className="px-6 py-4 bg-gray-50 border-y border-gray-200">
         <div className="grid grid-cols-3 gap-4 text-center">
-          <div>
-            <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Frame</p>
-            <p className="text-lg font-semibold text-gray-900">{currentFrame + 1} / {frames.length}</p>
+          <div className="border border-slate-200 rounded-lg py-3 bg-slate-50">
+            <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">Frame</p>
+            <p className="text-lg font-semibold text-slate-900">{frames.length ? currentFrame + 1 : 0} / {frames.length || 0}</p>
           </div>
-          <div>
-            <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Blocks</p>
-            <p className="text-lg font-semibold text-gray-900">{baseBlocks.length}</p>
+          <div className="border border-slate-200 rounded-lg py-3 bg-slate-50">
+            <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">Blocks</p>
+            <p className="text-lg font-semibold text-slate-900">{baseBlocks.length}</p>
           </div>
-          <div>
-            <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Dimensions</p>
-            <p className="text-lg font-semibold text-gray-900">{dimensions.width}×{dimensions.height}</p>
+          <div className="border border-slate-200 rounded-lg py-3 bg-slate-50">
+            <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">Dimensions</p>
+            <p className="text-lg font-semibold text-slate-900">{dimensions.width}×{dimensions.height}</p>
           </div>
         </div>
       </div>
 
-      {/* Controls */}
-      <div className="px-6 py-4">
+      <div className="px-6 py-4 bg-white border-t border-slate-200 mt-auto">
         <div className="flex gap-3">
           <button
             onClick={handlePlay}
             disabled={frames.length === 0}
-            className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold px-6 py-3 rounded-lg transition-all duration-200 flex items-center justify-center gap-2"
+            className="flex-1 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-semibold px-6 py-3 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 shadow-sm"
           >
             {isPlaying ? (
               <>
@@ -281,7 +278,7 @@ export default function ImageProcessor({
           <button
             onClick={handleExportGIF}
             disabled={frames.length === 0 || processing}
-            className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold px-6 py-3 rounded-lg transition-all duration-200 flex items-center justify-center gap-2"
+            className="flex-1 bg-amber-500 hover:bg-amber-600 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-semibold px-6 py-3 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 shadow-sm"
           >
             {processing ? (
               <>

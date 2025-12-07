@@ -5,7 +5,7 @@ import { loadImage, normalizeImageSizes, drawImageOnCanvas } from '@/lib/imageUt
 import { divideIntoBlocks } from '@/lib/blocks';
 import { findGreedyMatching } from '@/lib/matching';
 import { generateSimultaneousAnimation, renderFrame, AnimationFrame } from '@/lib/animation';
-import { exportToGIF, downloadBlob } from '@/lib/gifExport';
+import { exportToGIF } from '@/lib/gifExport';
 import { Block, MatchResult } from '@/lib/types';
 
 interface ImageProcessorProps {
@@ -34,6 +34,12 @@ export default function ImageProcessor({
   const [matchResults, setMatchResults] = useState<MatchResult[]>([]);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const animationRef = useRef<number | undefined>(undefined);
+
+  const computeExportDuration = () => {
+    // Scale duration with frame count but keep it between 1.5s and 5s
+    const auto = frames.length * 60; // ~60ms per frame target
+    return Math.min(5000, Math.max(1500, auto));
+  };
 
   // Process images - only runs once when component mounts or key props change
   useEffect(() => {
@@ -143,7 +149,7 @@ export default function ImageProcessor({
 
     const animate = (timestamp: number) => {
       if (frame >= frames.length) {
-        // Stop at the end instead of looping
+        setCurrentFrame(frames.length - 1);
         setIsPlaying(false);
         return;
       }
@@ -184,8 +190,18 @@ export default function ImageProcessor({
 
     try {
       setProcessing(true);
-      const blob = await exportToGIF(frames, dimensions.width, dimensions.height);
-      downloadBlob(blob, 'image-reorder.gif');
+      const blob = await exportToGIF(
+        frames,
+        dimensions.width,
+        dimensions.height,
+        computeExportDuration()
+      );
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'pixmix.gif';
+      a.click();
+      URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error exporting GIF:', error);
     } finally {
@@ -220,8 +236,8 @@ export default function ImageProcessor({
         </span>
       )}
 
-      <div className="flex-1 flex flex-col gap-4 p-5 overflow-hidden">
-        <div className="flex-1 bg-gradient-to-br from-slate-50 to-white rounded-lg shadow-inner border border-slate-200 p-4 flex items-center justify-center overflow-hidden min-h-[560px]">
+      <div className="flex-1 flex flex-col gap-4 p-5 min-h-0">
+        <div className="flex-1 min-h-0 bg-gradient-to-br from-slate-50 to-white rounded-lg shadow-inner border border-slate-200 p-4 flex items-center justify-center overflow-hidden">
           {dimensions.width > 0 && dimensions.height > 0 ? (
             <canvas
               ref={canvasRef}
@@ -235,7 +251,7 @@ export default function ImageProcessor({
           )}
         </div>
 
-        <div className="grid grid-cols-3 gap-4 text-center">
+        <div className="grid grid-cols-3 gap-4 text-center shrink-0">
           <div className="border border-slate-200 rounded-lg py-3 bg-slate-50">
             <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">Frame</p>
             <p className="text-lg font-semibold text-slate-900">{frames.length ? currentFrame + 1 : 0} / {frames.length || 0}</p>
@@ -252,7 +268,7 @@ export default function ImageProcessor({
       </div>
 
       <div className="px-6 py-4 bg-white border-t border-slate-200 mt-auto">
-        <div className="flex gap-3">
+        <div className="flex gap-3 shrink-0">
           <button
             onClick={handlePlay}
             disabled={frames.length === 0}

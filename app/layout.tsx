@@ -19,6 +19,7 @@ const bodyFont = Space_Grotesk({
 export const metadata: Metadata = {
   title: "PixMix.fun",
   description: "PixMix.fun — reorder and remix images with gradient-aware matching",
+  metadataBase: new URL("https://pixmix.fun"),
   icons: {
     icon: "/favicon.svg",
   },

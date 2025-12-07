@@ -7,6 +7,7 @@ export async function exportToGIF(
   frames: AnimationFrame[],
   width: number,
   height: number,
+  durationMs: number,
   onProgress?: (progress: number) => void
 ): Promise<Blob> {
   return new Promise(async (resolve, reject) => {
@@ -30,7 +31,7 @@ export async function exportToGIF(
       });
 
       // Add frames
-      const delay = 1000 / 30; // 30 fps
+      const delay = Math.max(10, durationMs / Math.max(1, frames.length));
       frames.forEach((frame) => {
         // Clear and render frame
         ctx.fillStyle = '#ffffff';

@@ -257,7 +257,7 @@ export default function HomeClient() {
 
               <div className="space-y-1.5">
                 <p className="font-semibold text-slate-900">4) Matching.</p>
-                <p>A greedy matcher pairs each target with the lowest-cost unused source block to stay fast on large grids.</p>
+                <p>We build all pair costs, sort targets by their best available cost, then iterate targets and pick the lowest-cost source that isn’t used yet. It’s O(n²) but lighter than optimal solvers and keeps large grids responsive.</p>
               </div>
 
               <div className="space-y-1.5">

@@ -2,6 +2,8 @@
 
 Gradient-aware image block reordering with a fast live preview. Upload two square images (ideally 512×512), tune block size and gradient/color weighting, and watch blocks animate into alignment. Export as a GIF with a custom duration.
 
+Repo: https://github.com/FranciscoBuru/pixmix
+
 ## Tech stack
 - Next.js (App Router, SSR shell) + React
 - Tailwind CSS (v4) + custom theme

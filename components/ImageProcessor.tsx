@@ -237,14 +237,14 @@ export default function ImageProcessor({
       )}
 
       <div className="flex-1 flex flex-col gap-4 p-5 min-h-0">
-        <div className="flex-1 min-h-0 bg-gradient-to-br from-slate-50 to-white rounded-lg shadow-inner border border-slate-200 p-4 flex items-center justify-center overflow-hidden">
+        <div className="flex-1 min-h-0 max-h-[calc(100vh-260px)] bg-gradient-to-br from-slate-50 to-white rounded-lg shadow-inner border border-slate-200 p-4 flex items-center justify-center overflow-hidden">
           {dimensions.width > 0 && dimensions.height > 0 ? (
             <canvas
               ref={canvasRef}
               width={dimensions.width}
               height={dimensions.height}
-              className="mx-auto rounded border border-slate-200 shadow-sm"
-              style={{ maxWidth: '100%', height: 'auto', display: 'block' }}
+              className="mx-auto rounded border border-slate-200 shadow-sm h-full w-full"
+              style={{ maxWidth: '100%', maxHeight: '100%', width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
             />
           ) : (
             <p className="text-slate-400 text-sm">Canvas initializing...</p>

@@ -4,7 +4,7 @@ Gradient-aware image block reordering with a fast live preview. Upload two squar
 
 Repo: https://github.com/FranciscoBuru/pixmix
 
-**Descripción (ES):** Reordena bloques de dos imágenes cuadradas (ideal 512×512) usando gradientes y color para que una se parezca a la otra. Ajusta el tamaño de bloque y el peso de gradiente/color, mira la animación en vivo y expórtala como GIF.
+**Descripción (ES):** Reordena pixeles de dos imágenes usando gradientes y color para que una se parezca a la otra. Ajusta el tamaño de bloque y el peso de gradiente/color, mira la animación en vivo y expórtala como GIF.
 
 ## Tech stack
 - Next.js (App Router, SSR shell) + React
